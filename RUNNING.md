@@ -184,6 +184,65 @@ loopback.
 docker compose up -d
 ```
 
+### Rerank on the GPU (optional)
+
+By default the container runs torch on the CPU, whatever card you have. That is
+deliberate: it keeps the image near 1 GB and means nobody has to install
+`nvidia-container-toolkit` to get started. Generation is unaffected — Ollama
+runs on the host and uses your GPU either way.
+
+To also put the embedder and reranker on the GPU:
+
+```bash
+make up          # Linux / macOS: detects nvidia-smi and does this for you
+```
+
+```powershell
+# Windows has no make, so name both files explicitly:
+docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d --build
+```
+
+`make up-cpu` and `make up-gpu` force either mode when you want to compare.
+
+Check it took effect — `device` should read `cuda`:
+
+```bash
+curl -s localhost:8000/health
+```
+
+Reranking drops from roughly 4.8 s per question to about 0.3 s. Retrieval
+results do not change: the index is prebuilt, so the same passages come back
+with the same scores. You are buying latency only.
+
+**Before you do this, check your VRAM.** The embedder and reranker need about
+4.6 GB together, on top of whatever Ollama is holding for the model:
+
+| Free VRAM | Advice |
+|---|---|
+| 16 GB+ | Use it. Everything fits alongside `qwen3:8b` or `qwen3:14b` |
+| 10–16 GB | Fine with `qwen3:4b` or `qwen3:8b` |
+| Under 8 GB | **Don't.** Leave retrieval on the CPU |
+
+On a small card the two retrieval models crowd out the LLM, Ollama spills it
+back to system RAM, and generation goes from ~3 s to ~30 s. You would be
+trading a 4.5 s saving for a 27 s loss. A 6 GB laptop GPU is firmly in this
+bracket — the CPU default is the right setting there, not a limitation.
+
+Requirements: `nvidia-container-toolkit` on Linux, or Docker Desktop on the
+WSL2 backend on Windows. Without them compose refuses to start rather than
+quietly falling back, which is why this is opt-in.
+
+If the build fails on the torch install, the CUDA index in
+`docker-compose.gpu.yml` does not match your driver. Check `nvidia-smi`, pick
+the right one from <https://pytorch.org/get-started/locally/>, and pass it
+without editing the file:
+
+```bash
+TORCH_INDEX=https://download.pytorch.org/whl/cu126 make up-gpu
+```
+
+---
+
 ### No Docker? Run it natively
 
 Docker is optional. Running directly is often simpler on Windows, and it

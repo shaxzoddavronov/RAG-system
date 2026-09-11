@@ -8,10 +8,13 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /srv
 
-# CPU-only torch. Keeps the image near 1 GB instead of 3 GB; the GPU work that
-# matters (token generation) happens in Ollama on the host, not in here.
-RUN pip install --no-cache-dir torch==2.9.1 \
-      --index-url https://download.pytorch.org/whl/cpu
+# CPU-only torch by default: keeps the image near 1 GB instead of ~3.5 GB, and
+# the GPU work that matters most (token generation) happens in Ollama on the
+# host regardless. docker-compose.gpu.yml overrides this with a CUDA index so a
+# machine with room to spare can also rerank on the GPU. See "Rerank on the GPU"
+# in RUNNING.md.
+ARG TORCH_INDEX=https://download.pytorch.org/whl/cpu
+RUN pip install --no-cache-dir torch==2.9.1 --index-url ${TORCH_INDEX}
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt

@@ -53,8 +53,13 @@ fits whatever you have:
 | Apple Silicon Mac | `qwen3:8b` (Metal) | ~4 s |
 
 Ollama detects your GPU by itself and falls back to CPU when there is none.
-The API container is CPU-only on purpose, so there is no
-`nvidia-container-toolkit` to set up on any platform.
+The API container is CPU-only by default on purpose, so there is no
+`nvidia-container-toolkit` to set up on any platform. On a machine with 10 GB+
+of spare VRAM you can put reranking on the GPU too — `make up` does it
+automatically when it finds one, and reranking drops from ~4.8 s to ~0.3 s.
+See [Rerank on the GPU](RUNNING.md#rerank-on-the-gpu-optional). Below ~8 GB
+leave it alone: the retrieval models crowd out the LLM and generation gets
+much slower than the reranking saved.
 
 **Retrieval quality does not change with hardware.** The search index is
 prebuilt and committed, so the passages found on a laptop are the same ones
