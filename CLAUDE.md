@@ -20,9 +20,7 @@ build scripts exist but are for maintainers only.
 ```bash
 make setup          # scripts/setup_profile.py — detects GPU/VRAM, writes .env
 make warmup         # download embedder + reranker (~4.6 GB) before demoing
-make up / down / logs   # Docker compose; `up` layers docker-compose.gpu.yml
-                    # automatically when nvidia-smi is on PATH
-make up-cpu / up-gpu    # force either mode instead of auto-detecting
+make up / down / logs   # Docker compose
 make dev            # native run: uvicorn app.main:app --host 0.0.0.0 --port 8000
 
 make verify         # retrieval metrics + Gate-1 calibration, in the container (no Ollama needed)
@@ -133,25 +131,6 @@ variables win over it. Notable settings:
 `OLLAMA_HOST` is confusingly overloaded: for the Ollama server it is a bind
 address, for this API it is a connect URL. Docker compose overrides it to
 `http://host.docker.internal:11434`.
-
-### CPU/GPU split
-
-Generation always runs in Ollama **on the host**, which does its own detection —
-so it uses the GPU regardless of anything here. The container governs only
-retrieval (embedder + reranker; FAISS and BM25 are CPU-only libraries either
-way), and defaults to a CPU torch wheel so the image stays ~1 GB and needs no
-`nvidia-container-toolkit`.
-
-`docker-compose.gpu.yml` opts in: it flips the `TORCH_INDEX` build arg to a CUDA
-wheel *and* reserves the device. Both halves are required — a CUDA build with no
-reservation still reports `cuda` unavailable, and a reservation with CPU-only
-torch cannot use it. `make up` layers it in when `nvidia-smi` exists.
-
-`/health`'s `device` field reports the container's torch device only. It reading
-`cpu` while generation is GPU-accelerated is the normal, correct state — not a
-misdetection. Below ~8 GB VRAM that is also the *right* configuration: the two
-retrieval models need ~4.6 GB and crowd the LLM out of VRAM, costing more in
-generation than reranking saves.
 
 ## Docs
 
