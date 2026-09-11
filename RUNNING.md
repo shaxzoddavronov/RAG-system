@@ -413,6 +413,7 @@ All settings live in `.env`.
 | `DEVICE` | `auto` | `auto`, `cpu`, `cuda`, `mps` |
 | `RERANK_THRESHOLD` | `0.60` | Gate 1. Higher refuses more readily |
 | `MAX_CONCURRENT_LLM` | `2` | Parallel generation cap |
+| `LOG_LEVEL` | `INFO` | `DEBUG` adds every retrieved chunk id and its score |
 
 ---
 
@@ -432,6 +433,42 @@ Models are still downloading. Run `make warmup` and watch `/health` —
 
 Lower `OLLAMA_NUM_CTX` **before** switching to a smaller model. The KV cache
 is usually what overflows, not the weights. `16384 → 8192` frees a lot.
+
+### Reading the logs
+
+```bash
+docker compose logs -f api
+```
+
+Each `/ask` prints one line per stage, tagged with a short request id so
+concurrent requests stay readable:
+
+```
+07:18:04 INFO    [2081] ask      'Malaka sertifikati necha yil muddatga beriladi?'
+07:18:10 INFO    [2081] retrieve 5 hits, top score 0.731 (threshold 0.60)  5220ms
+07:18:12 INFO    [2081] generate sufficient=True quotes=1 citations=1  2114ms
+07:18:12 INFO    [2081] ANSWERED grounded, 1 citation(s): -8206039  7334ms
+```
+
+A refusal names the gate that caused it, so you never have to guess:
+
+```
+07:18:10 INFO    [2081] REFUSED  gate 1: nothing retrieved above the threshold (LLM not called)  6372ms
+```
+
+Set `LOG_LEVEL=DEBUG` in `.env` to also see the query variants and every
+retrieved chunk with its rerank score — this is what to use when a question
+retrieves the wrong passage:
+
+```
+DEBUG   [dc30] variants ['ДЕЕ ni kim oʻtkazadi?', 'DEE ni kim oʻtkazadi?', 'davlat ekologik ekspertizasi ni kim oʼtkazadi']
+DEBUG   [dc30]   0.502  -8205403#0  234-qaror
+DEBUG   [dc30]   0.501  -8205525#0  234-qaror › 2-ilova › 3-bob. Davlat ekologik ekspertizasini oʻtkazish
+```
+
+Swagger's own traffic (`/docs`, `/openapi.json`) is filtered out unless it
+fails, and HuggingFace progress bars are suppressed — both are noise that used
+to bury the lines above.
 
 ### Very slow answers
 

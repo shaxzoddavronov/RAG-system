@@ -128,6 +128,20 @@ variables win over it. Notable settings:
   flip on float noise. On-topic-but-unanswerable questions are *expected* to
   pass Gate 1 and be caught by gates 2–4.
 
+### Logging (`app/logging_setup.py`)
+
+`configure()` is called once at import in `main.py`. Every `/ask` logs one line
+per stage tagged with a 4-char request id, since `MAX_CONCURRENT_LLM` plus
+threadpooled retrieval means requests interleave. Refusals log *which gate*
+fired via `GATE_EXPLANATION`, so a refusal is never anonymous. `LOG_LEVEL=DEBUG`
+adds query variants and per-hit rerank scores.
+
+The access-log filter reads uvicorn's structured `record.args`, not the rendered
+line: uvicorn appends the status phrase in its formatter, so at filter time the
+message still ends at the bare status number and a text match on `" 200 "`
+silently never fires. HF progress bars are disabled in `_silence_progress_bars()`
+— they render as hundreds of carriage-returned frames in `docker compose logs`.
+
 `OLLAMA_HOST` is confusingly overloaded: for the Ollama server it is a bind
 address, for this API it is a connect URL. Docker compose overrides it to
 `http://host.docker.internal:11434`.

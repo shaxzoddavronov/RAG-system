@@ -89,6 +89,12 @@ class Settings:
     rerank_threshold: float = field(
         default_factory=lambda: _float("RERANK_THRESHOLD", 0.60))
 
+    # --- Logging ----------------------------------------------------------
+    # DEBUG additionally logs the retrieved chunk ids and the rerank score of
+    # every hit, which is what you want when a question retrieves the wrong
+    # passage. INFO logs one line per pipeline stage.
+    log_level: str = field(default_factory=lambda: os.getenv("LOG_LEVEL", "INFO"))
+
     # --- Paths ------------------------------------------------------------
     index_dir: Path = field(default_factory=lambda: ROOT / os.getenv("INDEX_DIR", "index"))
     corpus_path: Path = field(
