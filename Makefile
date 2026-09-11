@@ -4,7 +4,8 @@ help:
 	@echo "Setup (run once):"
 	@echo "  make setup        detect your hardware and write .env"
 	@echo "  make warmup       download the embedder + reranker (~4.6 GB)"
-	@echo "  make up           start the API on http://localhost:8000"
+	@echo "  make up           start the API on http://localhost:8000 (Docker)"
+	@echo "  make dev          start the API without Docker (needs pip install)"
 	@echo ""
 	@echo "Checks:"
 	@echo "  make verify       retrieval metrics + gate 1 calibration (runs in the container)"
@@ -22,6 +23,10 @@ setup:
 
 warmup:
 	$(PY) scripts/warmup.py
+
+# Native run, no Docker. Also puts the reranker on a local GPU if there is one.
+dev:
+	$(PY) -m uvicorn app.main:app --host 0.0.0.0 --port 8000
 
 up:
 	docker compose up -d --build

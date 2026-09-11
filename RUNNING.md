@@ -184,6 +184,46 @@ loopback.
 docker compose up -d
 ```
 
+### No Docker? Run it natively
+
+Docker is optional. Running directly is often simpler on Windows, and it
+skips Step 6 entirely — a native process talks to `127.0.0.1:11434` fine, so
+Ollama can stay on its default bind.
+
+You need **Python 3.11 or 3.12**. Not 3.13+: some dependencies have no wheels
+there yet and will try to compile.
+
+```powershell
+# Windows PowerShell, from the repo folder
+py -3.11 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt      # pulls torch automatically, ~2.5 GB
+
+python scripts\setup_profile.py
+ollama pull qwen3:4b                 # or whatever .env selected
+
+python scripts\warmup.py            # ~4.6 GB, once
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+```bash
+# macOS / Linux equivalent
+python3.11 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+python scripts/setup_profile.py
+ollama pull qwen3:4b
+python scripts/warmup.py
+make dev
+```
+
+Then <http://localhost:8000/docs>, exactly as with Docker.
+
+Two differences worth knowing. Models cache in your user profile
+(`~/.cache/huggingface`) rather than a Docker volume. And if you have an
+NVIDIA GPU with a CUDA build of torch, the reranker uses it — answers come
+back in about 1–2 s instead of 8 s, because reranking is what dominates the
+CPU path.
+
 Then open <http://localhost:8000/docs> for the interactive Swagger UI.
 
 Browsing from another machine? Use the server's IP —

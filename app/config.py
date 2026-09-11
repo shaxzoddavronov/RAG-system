@@ -11,6 +11,17 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 
+# Load .env when running outside Docker. Compose injects the file itself via
+# env_file, so this is a no-op there; without it a native run silently ignores
+# the .env that setup_profile.py just wrote. Real environment variables always
+# win over the file.
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv(ROOT / ".env", override=False)
+except ImportError:  # optional dependency
+    pass
+
 # The single canonical refusal. Every gate returns exactly this string so the
 # eval suite can assert on equality rather than fuzzy-matching prose.
 REFUSAL = "Hujjatda bu haqida maʼlumot yoʻq."
