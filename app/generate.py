@@ -32,7 +32,8 @@ oʻz ichiga olmasligi mumkin. Bunday holatda ham "sufficient" = false. \
 Savolga toʻgʻridan-toʻgʻri javob bermaydigan, faqat mavzuga yaqin \
 maʼlumotni javob sifatida BERMANG.
 3. "citations" maydoniga siz foydalangan bloklarning identifikatorini AYNAN \
-kvadrat qavs ichidagi koʻrinishda yozing, masalan: "-8205881". Hech qanday \
+kvadrat qavs ichidagi koʻrinishda yozing, masalan: "-8205881#0". Identifikator \
+"#" belgisi va raqam bilan tugaydi — ularni TUSHIRIB QOLDIRMANG. Hech qanday \
 qoʻshimcha soʻz yoki belgi qoʻshmang.
 4. "quotes" maydoniga javobingizni tasdiqlovchi jumlalarni bloklardan SOʻZMA-SOʻZ \
 koʻchiring. Birorta ham soʻzni oʻzgartirmang va "..." bilan qisqartirmang.

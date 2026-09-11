@@ -484,6 +484,13 @@ Generation was truncated or malformed, usually a runaway that hit
 unverified. Raising the cap is rarely the fix; it normally means the question
 has no answer in the document.
 
+### `refusal_reason: "citation"`
+
+The model found the answer but wrote the citation id in the wrong shape. Since
+September 2026 a bare node id is accepted when it unambiguously identifies one
+retrieved block, so this should be rare; if you see it often, check the logs at
+`LOG_LEVEL=DEBUG` to see which ids were offered against which blocks.
+
 ### It refuses something that IS in the document
 
 Inspect retrieval first:

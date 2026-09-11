@@ -76,13 +76,33 @@ def gate_quotes(payload: dict, blocks: list[dict], min_len: int = 12) -> Verdict
     return Verdict(True)
 
 
+def resolve_citation(value: str, blocks: list[dict]) -> str | None:
+    """Map a model-written citation onto a retrieved block's cite_id, or None.
+
+    Blocks are labelled with chunk_id ("-8205881#0"), but models routinely write
+    the bare node_id ("-8205881") instead -- it is the visually obvious prefix,
+    and the older prompt example showed exactly that shape. Rejecting those cost
+    a correct, quote-verified answer over punctuation.
+
+    A bare node_id is accepted only when exactly one retrieved block carries it.
+    That keeps the guarantee intact: the citation still resolves to a passage we
+    actually retrieved, with no guessing. When several retrieved blocks share a
+    node_id -- every row of the Appendix 1 table lives in one node -- the
+    reference is genuinely ambiguous and is refused, because picking one would
+    attach the wrong row's text to the citation.
+    """
+    if value in {b["cite_id"] for b in blocks}:
+        return value
+    matches = {b["cite_id"] for b in blocks if b["node_id"] == value}
+    return matches.pop() if len(matches) == 1 else None
+
+
 def gate_citations(payload: dict, blocks: list[dict]) -> Verdict:
     """Gate 4 -- cited ids must come from what we actually retrieved."""
-    allowed = {b["cite_id"] for b in blocks}
     cited = [c for c in payload.get("citations", []) if c]
     if not cited:
         return Verdict(False, "citation")
-    if any(c not in allowed for c in cited):
+    if any(resolve_citation(c, blocks) is None for c in cited):
         return Verdict(False, "citation")
     return Verdict(True)
 

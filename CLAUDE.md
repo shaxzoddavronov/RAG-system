@@ -75,6 +75,14 @@ behaviour is identical on a 4B and a 32B model. Any failure returns the single
 constant `REFUSAL` string from `app/config.py`, so refusals are testable by
 equality. **Do not weaken this to fuzzy matching or model-judged grounding.**
 
+Gate 4 resolves citations through `resolve_citation()`, not a bare set lookup.
+Blocks are labelled with `chunk_id` (`-8205881#0`) but models often write the
+bare `node_id` (`-8205881`); that is accepted **only** when exactly one
+retrieved block carries it, so the citation still provably points at retrieved
+text. Ambiguous node ids (Appendix 1 table rows share a node) stay refused.
+`main.py` must resolve through the same function when building the response, or
+a citation gate 4 accepted silently vanishes from `citations`.
+
 Gate 3 (quotes) matches exactly on the `fold()`ed form and deliberately rejects
 near-misses: Uzbek negation is the infix `-ma-`, so a two-character edit inverts
 a legal obligation. A gate-3 failure earns up to `QUOTE_RETRIES` regenerations

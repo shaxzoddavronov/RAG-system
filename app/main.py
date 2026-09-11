@@ -18,7 +18,7 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import StreamingResponse
 
 from app.config import REFUSAL, settings
-from app.gates import Verdict, gate_retrieval, verify_answer
+from app.gates import Verdict, gate_retrieval, resolve_citation, verify_answer
 from app.logging_setup import configure as configure_logging
 from app.generate import Generator, OllamaError, OllamaOutputError
 from app.retrieval import IndexMismatch, Retriever
@@ -181,11 +181,17 @@ async def _answer(question: str) -> AskResponse:
     if not verdict.ok:
         return _refuse(verdict.reason or "unknown", started, rid)
 
+    # Resolve through the same function gate 4 used, or a citation it accepted
+    # as a bare node_id would silently vanish from the response.
     by_id = {b["cite_id"]: b for b in blocks}
+    resolved = dict.fromkeys(
+        cid for cid in (resolve_citation(c, blocks) for c in payload["citations"])
+        if cid is not None
+    )
     citations = [
         Citation(node_id=by_id[cid]["node_id"], path=by_id[cid]["path"],
                  url=by_id[cid]["url"], snippet=by_id[cid]["text"][:300])
-        for cid in dict.fromkeys(payload["citations"]) if cid in by_id
+        for cid in resolved
     ]
     elapsed = int((time.perf_counter() - started) * 1000)
     log.info("[%s] ANSWERED grounded, %d citation(s): %s  %dms",
