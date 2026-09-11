@@ -464,9 +464,38 @@ curl -s -X POST localhost:8000/search -H 'content-type: application/json' \
 
 ### API refuses to start: index mismatch
 
-`data/corpus.jsonl` changed without `index/` being rebuilt. Serving that
-combination would attach citations to the wrong text, so it is refused
-deliberately. Run `make index`, or `git checkout data/ index/`.
+```
+IndexMismatch: index was built from corpus 8436381e55fc72b5,
+but data/corpus.jsonl is b9f77cbf5f9c9133. Re-run scripts/build_index.py.
+```
+
+**On Windows, after a fresh clone, this is a line-ending problem, not a broken
+download.** Git on Windows defaults to `core.autocrlf=true` and rewrites LF to
+CRLF on checkout. That changes the file's bytes, so the hash no longer matches
+the one recorded when the index was built. The document is fine; only the
+invisible line endings differ.
+
+Versions from September 2026 onward hash the corpus with line endings
+normalized, so this cannot happen. On an older clone, update and re-checkout
+the data files:
+
+```powershell
+git pull
+git rm --cached -r . -q
+git reset --hard
+docker compose up -d --build
+```
+
+If you cannot update, disable the rewrite and clone again:
+
+```powershell
+git config --global core.autocrlf input
+```
+
+Otherwise this means `data/corpus.jsonl` genuinely changed without `index/`
+being rebuilt. Serving that combination would attach citations to the wrong
+text, so it is refused deliberately. Run `make index`, or
+`git checkout data/ index/`.
 
 ---
 

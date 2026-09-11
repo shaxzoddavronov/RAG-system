@@ -10,7 +10,6 @@ chunks the whole thing is a couple of megabytes, so committing it means:
 
 Writes index/faiss.bin, index/bm25/, index/chunks.jsonl and index/manifest.json.
 """
-import hashlib
 import json
 import shutil
 import sys
@@ -26,10 +25,9 @@ from sentence_transformers import SentenceTransformer
 from app.chunking import build_chunks, chunks_to_dicts
 from app.config import settings
 from app.normalize import fold
-
-
-def corpus_digest(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()[:16]
+# Shared with the serving path: the builder and the startup check must compute
+# the digest identically, or a healthy clone is rejected as a stale index.
+from app.retrieval import corpus_digest
 
 
 def main() -> int:

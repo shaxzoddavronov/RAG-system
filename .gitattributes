@@ -1,0 +1,14 @@
+# Windows checks out text files with CRLF by default (core.autocrlf), which
+# changes their bytes. index/manifest.json stores a SHA-256 of
+# data/corpus.jsonl, so a rewritten checkout made the API refuse to start with
+# an IndexMismatch on a perfectly good clone. These files are build artifacts,
+# not source: keep them byte-identical everywhere.
+data/corpus.jsonl   -text
+index/chunks.jsonl  -text
+index/manifest.json -text
+eval/gold.jsonl     -text
+
+# Index binaries must never be touched by any filter.
+index/faiss.bin     binary
+index/bm25/*.npy    binary
+index/bm25/*.json   -text

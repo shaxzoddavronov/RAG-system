@@ -7,6 +7,7 @@ size and the combination is what makes the refusal threshold trustworthy.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 from dataclasses import dataclass
 from pathlib import Path
@@ -32,6 +33,19 @@ class Hit:
 
 class IndexMismatch(RuntimeError):
     """The committed index does not match the corpus it is being served with."""
+
+
+def corpus_digest(path: Path) -> str:
+    """Content hash of the corpus, insensitive to how git checked the file out.
+
+    Windows clones with core.autocrlf=true rewrite LF to CRLF, which changes
+    every byte of a line ending and so changes a naive sha256 of the file --
+    making a healthy clone look like a stale index and refusing to start. Line
+    endings carry no meaning in a JSONL corpus, so normalize them out. Any real
+    change to the text still changes the digest.
+    """
+    data = path.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return hashlib.sha256(data).hexdigest()[:16]
 
 
 class Retriever:
@@ -78,11 +92,10 @@ class Retriever:
 
     def _verify_corpus(self) -> None:
         """Stale index means citations point at the wrong text -- refuse to serve."""
-        import hashlib
         path = self.settings.corpus_path
         if not path.exists():
             return
-        digest = hashlib.sha256(path.read_bytes()).hexdigest()[:16]
+        digest = corpus_digest(path)
         expected = self.manifest.get("corpus_hash")
         if expected and digest != expected:
             raise IndexMismatch(
