@@ -1,0 +1,8 @@
+# Only needed to regenerate the corpus and the index. The PM never runs these;
+# the outputs are committed.
+-r requirements.txt
+lxml==6.0.2
+cssselect==1.3.0
+requests==2.32.5
+reportlab==5.0.1
+pypdf==6.1.3

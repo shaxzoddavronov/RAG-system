@@ -1,0 +1,12 @@
+# torch is installed separately in the Dockerfile from the CPU wheel index --
+# the default PyPI wheel carries CUDA and makes the image ~2 GB larger for no
+# benefit, since the container never touches the GPU. Ollama on the host does.
+fastapi==0.141.1
+uvicorn[standard]==0.52.4
+pydantic==2.13.4
+numpy==2.0.2
+sentence-transformers==6.0.1
+faiss-cpu==1.13.0
+bm25s==0.3.11
+httpx==0.28.1
+python-dotenv==1.1.1

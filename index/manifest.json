@@ -1,0 +1,8 @@
+{
+  "embed_model": "BAAI/bge-m3",
+  "rerank_model": "BAAI/bge-reranker-v2-m3",
+  "dim": 1024,
+  "chunks": 573,
+  "corpus_hash": "8436381e55fc72b5",
+  "built_on_device": "cuda"
+}
